@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>MinnPost</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript">var _sf_startpt=(new Date()).getTime()</script>
+<link rel="shortcut icon" href="http://www.minnpost.com//sites/default/themes/siteskin/favicon.ico" type="image/x-icon" />
+<meta name="keywords" content="Mark Dayton,Minnesota DFL,Minnesota GOP,Minnesota Legislature,Vikings Stadium,Voter ID Amendment" />
+<meta name="description" content="  " />
+<meta property="og:title" content="The 2012 Legislative session: What did they pass?"/>
+<meta property="og:site_name" content="MinnPost"/>
+<meta property="og:description" content="Explore bills by category, investigate which bills Gov. Dayton vetoed, and search by your legislators.
+"/>
+<meta property="og:image" content="http://www.minnpost.com/sites/default/files/images/thumbnails/fullpagearticles/BillExplorerGraphic3.png"/>
+<link rel="apple-touch-icon" href="http://www.minnpost.com//sites/default/themes/siteskin/inc/images/apple-touch-icon.png" />
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+
+
+  <link type="text/css" rel="stylesheet" media="all" href="http://www.minnpost.com/sites/default/files/css/css_821e22b02514b6df405432d971d85dea.css" />
+<link type="text/css" rel="stylesheet" media="screen" href="http://www.minnpost.com/sites/default/files/css/css_b26ad2d81bc74f1246e9c9a4c45ecdea.css" />
+<link type="text/css" rel="stylesheet" media="print" href="http://www.minnpost.com/sites/default/files/css/css_cd72d16d00ebb27825710d934e28fbe8.css" />
+  <!--[if IE]>
+      <link rel="stylesheet" href="http://www.minnpost.com/sites/default/themes/derma/inc/css/ie.css?n" type="text/css">
+  <![endif]-->
+    <script type="text/javascript" src="http://www.minnpost.com/sites/default/files/js/js_de97366bf2ae2bb44590e7cf73e2a6d6.js"></script>
+<script type="text/javascript" src="http://www.minnpost.com/sites/all/libraries/tinymce/jscripts/tiny_mce/tiny_mce.js?n"></script>
+    
+
+</head>
+<body class="not-front logged-in page-node node-type-article one-sidebar sidebar-right admin-nw admin-vertical admin-df  section-data section-data-id-2012 section-data-id-2012-id-05 section-data-id-2012-id-05-how-we-built-legislative-bill-explorer one-sidebar sidebar-right">
+<div class="outside-embeddable-container">
+
+
+
+
+  <!-- START: Embeddable -->
+  <div class="node-body fieldlayout node-field-body">
+    <style type="text/css">
+      /* @import url('https://s3.amazonaws.com/data.minnpost/js/qtip2-master-20121022/jquery.qtip.min.css'); */
+    </style>
+    
+    <style type="text/css">
+      #minnpost-2012-election-state-leg-change {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .clear {
+        clear: both;
+      }
+      .js-dependent,
+      .hidden {
+        display: none;
+      }
+      .footnote {
+        font-size: .75em;
+        font-style: italic;
+        color: #414141;
+        margin-top: 3em;
+        border-top: 1px solid #BCBCBC;
+        padding-top: 1em;
+      }
+      .loading-general {
+        width: 100%;
+        text-align: center;
+        padding: 2em 2em;
+        color: #ABABAB;
+        vertical-align: middle;
+        height: 100%;
+        line-height: 100%;
+      }
+      .loading-general span {
+        padding: 10px 5px 10px 40px;
+        background: transparent url('https://s3.amazonaws.com/data.minnpost/projects/2012-mn-election-results/images/ajax-loader.gif') center left no-repeat;
+        vertical-align: middle;
+        height: 100%;
+        line-height: 100%;
+      }
+      
+      /**
+       * Responsive screen size styles
+       */
+      @media screen and (max-width: 768px) {
+      }
+    </style>
+    
+    <!--[if lte IE 7]>
+    <![endif]-->
+    
+    
+    
+    <!-- Initial HTML for application -->
+    <div id="minnpost-2012-election-state-leg-change">
+      <noscript>
+        <p>This application requires Javascript which is used to make your web browser more interactive.  If this message does not go away, please consider enabling Javascript.  Here are <a href="http://www.enable-javascript.com/" target="_blank">instructions on how to enable JavaScript in your web browser</a>.</p>
+      </noscript>
+      
+      <!--[if lt IE 7]>
+        <div class="ie-upgrade-note">
+          <h4>Consider upgrading your browser</h4>
+          <p>Your <strong>Internet Browser</strong> is the application you use to navigate webpages on the internet.  You are currently using an older version of Internet Explorer.  Unfortunately, with this old browser, you will not be able to experience the full version of this interactive story.</p>
+          
+          <p><a href="http://browsehappy.com/" target="_blank">Click here to find out about options for newer browsers</a>.</p>
+        
+          <p>If you cannot install new applications on your computer (because you are at work, for example), consider using <a href="http://www.google.com/chromeframe" target="_blank">Google's Chrome Frame</a> for Internet Explorer.</p>
+        </div>
+      <![endif]-->
+      
+      <div id="chart-container">
+      </div>
+      
+      <p class="footnote">Registered voter data provided by the <a href="http://www.sos.state.mn.us/index.aspx?page=531" target="_blank">MN Secretary of State</a>.</p>
+    </div>
+    
+    <!-- Templates to be used in client side processing. -->
+    <script id="template-loading" type="text/template">
+      <div class="loading-general-container">
+        <div class="loading-general"><span>Loading...</span></div>
+      </div>
+    </script>
+    
+    <script id="template-service-down" type="text/template">
+      <h3>We are sorry</h3>
+      <p>The data service seems to be down or you no longer have access to the Internet.  Try refreshing the page or checking your Internet connection.</p>
+    </script>
+    
+    <script id="template-application" type="text/template">
+    </script>
+    
+    <script id="template-tooltip" type="text/template">
+      <div class="tooltip-container">
+      </div>
+    </script>
+  
+    <!-- jQuery that is used on MinnPost site (ensures test environment) -->
+    <script type="text/javascript">
+      window.jQuery || document.write('<script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery-1.3.2/jquery-1.3.2.min.js"><\/script>')
+    </script>
+    <!-- jQuery we want to use -->
+    <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/underscore-1.3.3/underscore-min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery-custom-master-20120606/jquery-1.7.2.custom.min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery.jsonp-2.4.0/jquerycustom.jsonp-2.4.0.min.js"></script>
+    
+    
+    <script type="text/javascript">
+      // Handle custom jQuery
+      jQueryCustom = jQueryCustom.noConflict();
+      
+      (function($, w, undefined) {
+        var dataURL = [''];
+        var templateLoading = $('#template-loading').html();
+        var templateTooltip = $('#template-tooltip').html();
+        var templateApplication = $('#template-application').html();
+        var templateDown = $('#template-service-down').html();
+        
+        // Function for handling data after it is loaded
+        var processData = function(data) {
+          // Reset container
+          $('#chart-container').html(_.template(templateApplication, {}));
+          
+        };
+        
+        // Kick it off
+        $('#chart-container').html(_.template(templateLoading, {}));
+        $.jsonp({
+          url: dataURL.join(''),
+          success: processData,
+          error: function(e) {
+            $('#chart-container').html(_.template(templateDown, {}));
+          }
+        });
+      })(jQueryCustom, window);
+    </script>
+  </div>
+  <!-- END: Embeddable -->
+
+
+
+
+</div>
+</body>
+</html>
