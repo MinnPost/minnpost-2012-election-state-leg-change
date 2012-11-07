@@ -148,6 +148,8 @@
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery-custom-master-20120606/jquery-1.7.2.custom.min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery.jsonp-2.4.0/jquerycustom.jsonp-2.4.0.min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/raphael-2.1.0/raphael-min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/d3-2.10.3/d3.v2.min.js"></script>
+
     
     
     <script type="text/javascript">
@@ -160,6 +162,15 @@
         var templateTooltip = $('#template-tooltip').html();
         var templateApplication = $('#template-application').html();
         var templateDown = $('#template-service-down').html();
+        
+        // Party colors
+        var parties = {
+          'IP': { party: 'IP', colors: [ '#FF7429' ], title: 'Independence' },
+          'R': { party: 'R', colors: [ '#AD001A' ], title: 'Republican' },
+          'DFL': { party: 'DFL', colors: [ '#0071AC' ], title: 'Democratic' },
+          'D': { party: 'D', colors: [ '#0071AC' ], title: 'Democratic-Farmer-Labor' },
+          'NP': { party: 'NP', colors: [ '#A8A8A8' ], title: 'Nonpartisan' }
+        };
         
         // Object/class for handling candidates
         var NewCandidate = function(d) {
@@ -178,8 +189,8 @@
         NewCandidate.prototype.init = function() {
           // Process data
           this.type = (this.incumbent) ? 'incumbent' : this.type;
-          this.type = (!this.incumbent && this.elected === '') ? 'new' : this.type;
-          this.type = (!this.incumbent && this.elected !== '') ? 'returning' : this.type;
+          this.type = (!this.incumbent && this.elected === '2012') ? 'new' : this.type;
+          this.type = (!this.incumbent && this.elected !== '2012') ? 'returning' : this.type;
         }
         
         // Function for handling data after it is loaded
@@ -189,10 +200,42 @@
           var w = $('#paper-container').width();
           var h = $('#paper-container').height();
           
-          // Process data
-          candidates = [];
+          // Process data into what D3 likes
+          candidates = {};
           _.each(data, function(d) {
-            candidates.push(new NewCandidate(d));
+            d = new NewCandidate(d);
+            var group = d.type + '-' + d.party;
+            candidates[group] = candidates[group] || {
+              name: d.type,
+              children: []
+            };
+            candidates[group].children.push(d);
+          });
+          candidates = { name: 'Candidates', children: _.toArray(candidates) };
+          
+          // Use D3 pack layout
+          var pack = d3.layout.pack()
+            .padding(5)
+            .size([w, h])
+            .value(function(d) { return 1; });
+          var packed = pack.nodes(candidates);
+          
+          // Render with Raphael
+          var paper = Raphael('paper-container', w, h);
+          _.each(packed, function(p) {
+            var attr = {};
+            
+            if (p.depth <= 1) {
+              attr.fill = 'transparent';
+              attr['stroke-width'] = 0;
+            }
+            if (p.depth == 1) {
+              attr.fill = '#E2E2E2';
+            }
+            if (p.depth >= 2) {
+              attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC'
+            }
+            paper.circle(p.x, p.y, p.r).attr(attr);
           });
         };
         
