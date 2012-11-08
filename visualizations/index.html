@@ -106,6 +106,11 @@
         margin-left: .5em;
       }
       
+      .chart-totals {
+        margin-left: .5em;
+        font-size: .75em;
+      }
+      
       /**
        * Responsive screen size styles
        */
@@ -194,6 +199,17 @@
       </div>
     </script>
     
+    <script id="template-chart-total" type="text/template">
+      <span class="chart-totals">
+        <% for (var i = 0, l = g.length; i < l; i++) { %>
+          <span style="color: <%= g[i][0].partyColor %>">
+            <%= g[i].length %>
+          </span>
+          <% if (i < l - 1) { %>-<% } %>
+        <% } %>
+      </span>
+    </script>
+    
     <script id="template-tooltip" type="text/template">
       <div class="tooltip-container">
         <h3>
@@ -252,6 +268,7 @@
         var templateApplication = $('#template-application').html();
         var templateDown = $('#template-service-down').html();
         var templateLabel = $('#template-chart-labels').html();
+        var templateTotalLabel = $('#template-chart-total').html();
         
         // For local testing
         if (location.host.indexOf('localhost') !== -1) {
@@ -269,9 +286,9 @@
         
         // Types
         var typesTranslator = {
-          'new': { title: 'New', colors: [ '#2EB800' ] },
-          'incumbent': { title: 'Incumbent', colors: [ '#F53D00' ] },
-          'returning': { title: 'Returning', colors: [ '#B88A00' ] }
+          'new': { title: 'New', colors: [ '#4BB498' ] },
+          'incumbent': { title: 'Incumbent', colors: [ '#B4984B' ] },
+          'returning': { title: 'Returning', colors: [ '#D8692C' ] }
         };
         
         // Object/class for handling candidates
@@ -341,6 +358,9 @@
           // Make labels.
           var groups = _.filter(packed, function(p) { return (p.depth === 1); });
           $el.before(_.template(templateLabel, { g: groups }));
+          var totalGroup = _.filter(packed, function(p) { return (p.depth === 2); });
+          $el.parent().find('h3').append(_.template(templateTotalLabel, 
+            { g: _.sortBy(_.groupBy(totalGroup, 'party'), 'length').reverse() }));
 
           // Render with Raphael
           var paper = Raphael(el, w, h);
