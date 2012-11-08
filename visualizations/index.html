@@ -171,13 +171,17 @@
       <div class="chart-labels">
         <% var count = 0; %>
         <% for (var i in g) { %>
-          <%= i %>:
-          <% g[i] = _.sortBy(g[i], 'party'); for (var j = 0, l = g[i].length; j < l; j++) { %>
-            <span style="color: <%= g[i][j].partyColor %>;">
-              <%= g[i][j].children.length %>
+          <span style="color: <%= g[i].typeColor %>"><%= g[i].typeTitle %></span>: 
+          
+          <% var p = _.groupBy(g[i].children, 'party'); %>
+          <% var pCount = 0; %>
+          <% for (var j in p) { %>
+            <span style="color: <%= p[j][0].partyColor %>;">
+              <%= p[j].length %>
             </span>
-            <% if (j < l - 1) { %>-<% } %>
+            <% pCount++; if (pCount < _.size(p)) { %>-<% } %>
           <% } %>
+          
           <% count++; if (count < _.size(g)) { %>|<% } %>
         <% } %>
       </div>
@@ -186,8 +190,10 @@
     <script id="template-tooltip" type="text/template">
       <div class="tooltip-container">
         <h3>
-          <%= d.name %> 
-          (<span style="color: <%= d.partyColor %>"><%= d.party %></span>)
+          <%= d.name %>
+          <% if (d.party) { %>
+            (<span style="color: <%= d.partyColor %>"><%= d.party %></span>)
+          <% } %>
         </h3>
         <table>
           <tbody>
@@ -246,7 +252,7 @@
         }
         
         // Party colors
-        var parties = {
+        var partyTranslator = {
           'IP': { party: 'IP', colors: [ '#FF7429' ], title: 'Independence' },
           'R': { party: 'R', colors: [ '#AD001A' ], title: 'Republican' },
           'DFL': { party: 'DFL', colors: [ '#0071AC' ], title: 'Democratic' },
@@ -256,19 +262,9 @@
         
         // Types
         var typesTranslator = {
-          'new': { title: 'New', lighten: 0 },
-          'incumbent': { title: 'Incumbent', lighten: -0.2 },
-          'returning': { title: 'Returning', lighten: -0.5 }
-        };
-        
-        // Color functions
-        var lighten = function(color, amount) {
-          amount = amount || 0.2;
-          var rgb = Raphael.getRGB(color);
-          var hsb = Raphael.rgb2hsb(rgb.r, rgb.g, rgb.b);
-          var s = 'hsb(' + hsb.h + ', ' + hsb.s + ', ' + (hsb.b + amount) + ')';
-          var newrgb = Raphael.getRGB(s);
-          return newrgb.hex;
+          'new': { title: 'New', colors: [ '#8CB89F' ] },
+          'incumbent': { title: 'Incumbent', colors: [ '#AAAAAA' ] },
+          'returning': { title: 'Returning', colors: [ '#F9A14B' ] }
         };
         
         // Object/class for handling candidates
@@ -293,7 +289,12 @@
           this.type = (!this.incumbent && this.elected === this.selectedYear && this.previous_terms === '') 
             ? 'new' : this.type;
           
-          this.partyColor = (this.party && parties[this.party]) ? parties[this.party].colors[0] : '#DCDCDC';
+          this.partyColor = (this.party && partyTranslator[this.party]) ? 
+            partyTranslator[this.party].colors[0] : '#DCDCDC';
+          this.typeColor = (this.type && typesTranslator[this.type]) ? 
+            typesTranslator[this.type].colors[0] : '#DCDCDC';
+          this.typeTitle = (this.type && typesTranslator[this.type]) ? 
+            typesTranslator[this.type].title : '';
         }
         
         var drawChamber = function(data, set, el) {
@@ -307,15 +308,19 @@
           _.each(data, function(d) {
             d.selectedYear = selectedYear;
             d = new NewCandidate(d);
-            var group = d.type + '-' + d.party;
+            var group = d.type;
             candidates[group] = candidates[group] || {
               name: typesTranslator[d.type].title,
               type: d.type,
-              party: d.party,
-              partyColor: d.partyColor,
+              typeColor: d.typeColor,
+              typeTitle: d.typeTitle,
               children: []
             };
             candidates[group].children.push(d);
+          });
+          candidates = _.map(candidates, function(c) {
+            c.children = _.sortBy(c.children, 'party').reverse();
+            return c;
           });
           candidates = { name: 'Candidates', children: _.toArray(candidates) };
           
@@ -328,7 +333,6 @@
           
           // Make labels.
           var groups = _.filter(packed, function(p) { return (p.depth === 1); });
-          groups = _.groupBy(groups, 'type');
           $el.before(_.template(templateLabel, { g: groups }));
 
           // Render with Raphael
@@ -337,19 +341,19 @@
             var attr = {};
             
             // Determine colors and other attributes for circles
-            if (p.depth <= 1) {
+            attr['stroke-width'] = 0;
+            if (p.depth == 0) {
               attr.fill = '#FFFFFF';
               attr['stroke-width'] = 0;
             }
             if (p.depth == 1) {
-              attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC';
-              attr.fill = lighten(attr.fill, typesTranslator[p.type].lighten);
-              attr.opacity = 0.2;
+              attr.fill = p.typeColor;
+              attr.opacity = 0.4;
               p.r += 2;
             }
             if (p.depth >= 2) {
               attr['stroke-width'] = 0;
-              attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC'
+              attr.fill = p.partyColor;
             }
             
             // Make circle
@@ -357,6 +361,7 @@
             
             // Add hover
             if (p.depth !== 0) {
+              // Tooltip
               $(packed[i].circle.node).qtip({
                 content: {
                   text: _.template(templateTooltip, { d: p })
