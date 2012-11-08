@@ -81,6 +81,7 @@
       .viz-container {
         width: 50%;
         float: left;
+        margin-bottom: 1em;
       }
       
       .paper-container {
@@ -115,10 +116,23 @@
        * Responsive screen size styles
        */
       @media screen and (max-width: 768px) {
+        .viz-container {
+          width: 100%;
+          float: none;
+        }
       }
     </style>
     
     <!--[if lte IE 7]>
+      <style type="text/css">
+        .ie-upgrade-note {
+          font-size: 90%;
+          background-color: #DCDCDC;
+          border: 1px solid #A2A2A2;
+          padding: 1em;
+          margin: 1em 0 2em 0;
+        }
+      </style>
     <![endif]-->
     
     
@@ -129,7 +143,7 @@
         <p>This application requires Javascript which is used to make your web browser more interactive.  If this message does not go away, please consider enabling Javascript.  Here are <a href="http://www.enable-javascript.com/" target="_blank">instructions on how to enable JavaScript in your web browser</a>.</p>
       </noscript>
       
-      <!--[if lt IE 7]>
+      <!--[if lte IE 7]>
         <div class="ie-upgrade-note">
           <h4>Consider upgrading your browser</h4>
           <p>Your <strong>Internet Browser</strong> is the application you use to navigate webpages on the internet.  You are currently using an older version of Internet Explorer.  Unfortunately, with this old browser, you will not be able to experience the full version of this interactive story.</p>
@@ -138,12 +152,16 @@
         
           <p>If you cannot install new applications on your computer (because you are at work, for example), consider using <a href="http://www.google.com/chromeframe" target="_blank">Google's Chrome Frame</a> for Internet Explorer.</p>
         </div>
+        
+        <div>
+          <p>The following is a snapshot of the interactive application:</p>
+          <img src="https://s3.amazonaws.com/data.minnpost/projects/minnpost-2012-election-state-leg-change/images/2011-2013-leg-change.jpeg" />
       <![endif]-->
       
       <div id="chart-container">
       </div>
       
-      <p class="footnote">Data from multiple sources, including <a href="http://www.leg.state.mn.us/" target="_blank">MN State Legislature</a>.</p>
+      <p class="footnote">Data compiled by MinnPost, including data from <a href="http://www.leg.state.mn.us/" target="_blank">MN State Legislature</a>.</p>
     </div>
     
     <!-- Templates to be used in client side processing. -->
@@ -183,18 +201,19 @@
       <div class="chart-labels">
         <% var count = 0; %>
         <% for (var i in g) { %>
-          <span class="color-block" style="background-color: <%= g[i].typeColor %>"></span>
-          <%= g[i].typeTitle %>
-          
-          <% var p = _.groupBy(g[i].children, 'party'); %>
-          <% var pCount = 0; %>
-          <% for (var j in p) { %>
-            <span style="color: <%= p[j][0].partyColor %>;">
-              <%= p[j].length %>
-            </span>
-            <% pCount++; if (pCount < _.size(p)) { %>-<% } %>
+          <% if (g[i].typeColor) { %>
+            <span class="color-block" style="background-color: <%= g[i].typeColor %>"></span>
+            <%= g[i].typeTitle %>
+            
+            <% var p = _.groupBy(g[i].children, 'party'); %>
+            <% var pCount = 0; %>
+            <% for (var j in p) { %>
+              <span style="color: <%= p[j][0].partyColor %>;">
+                <%= p[j].length %>
+              </span>
+              <% pCount++; if (pCount < _.size(p)) { %>-<% } %>
+            <% } %>
           <% } %>
-          
         <% } %>
       </div>
     </script>
@@ -261,6 +280,11 @@
       jQueryCustom = jQueryCustom.noConflict();
       
       (function($, w, undefined) {
+        // If IE7, then just give up.
+        if ($.browser.msie === true && $.browser.version < 8) {
+          return;
+        }
+      
         var dataURL = 'https://s3.amazonaws.com/data.minnpost/projects/minnpost-2012-election-state-leg-change/data/data.jsonp';
         var dataContainer = {};
         var templateLoading = $('#template-loading').html();
@@ -286,9 +310,9 @@
         
         // Types
         var typesTranslator = {
-          'new': { title: 'New', colors: [ '#4BB498' ] },
-          'incumbent': { title: 'Incumbent', colors: [ '#B4984B' ] },
-          'returning': { title: 'Returning', colors: [ '#D8692C' ] }
+          'new': { title: 'New', colors: [ '#275a2b' ] },
+          'incumbent': { title: 'Incumbent', colors: [ '#4e4948' ] },
+          'returning': { title: 'Returning', colors: [ '#711e4a' ] }
         };
         
         // Object/class for handling candidates
@@ -357,7 +381,7 @@
           
           // Make labels.
           var groups = _.filter(packed, function(p) { return (p.depth === 1); });
-          $el.before(_.template(templateLabel, { g: groups }));
+          $el.after(_.template(templateLabel, { g: groups }));
           var totalGroup = _.filter(packed, function(p) { return (p.depth === 2); });
           $el.parent().find('h3').append(_.template(templateTotalLabel, 
             { g: _.sortBy(_.groupBy(totalGroup, 'party'), 'length').reverse() }));
@@ -375,9 +399,10 @@
             }
             if (p.depth == 1) {
               attr.stroke = p.typeColor;
+              attr.fill = p.typeColor;
               attr['stroke-width'] = 4;
-              attr.fill = '#FFFFFF';
-              attr.opacity = 0.4;
+              attr['stroke-opacity'] = 0.7;
+              attr['fill-opacity'] = 0.3;
               p.r += 2;
             }
             if (p.depth >= 2) {
