@@ -38,7 +38,7 @@
   <!-- START: Embeddable -->
   <div class="node-body fieldlayout node-field-body">
     <style type="text/css">
-      /* @import url('https://s3.amazonaws.com/data.minnpost/js/qtip2-master-20121022/jquery.qtip.min.css'); */
+      @import url('https://s3.amazonaws.com/data.minnpost/js/qtip2-master-20121022/jquery.qtip.min.css');
     </style>
     
     <style type="text/css">
@@ -78,9 +78,14 @@
         line-height: 100%;
       }
       
-      #paper-container {
+      .viz-container {
+        width: 50%;
+        float: left;
+      }
+      
+      .paper-container {
         width: 100%;
-        height: 500px;
+        height: 300px;
       }
       
       /**
@@ -131,11 +136,35 @@
     </script>
     
     <script id="template-application" type="text/template">
-      <div id="paper-container"></div>
+      <div class="clear-block">
+        <div class="viz-container senate-2011-container">
+          <h3>Senate (before)</h3>
+          <div id="senate-2011-paper" class="paper-container"></div>
+        </div>
+        <div class="viz-container senate-2013-container">
+          <h3>Senate (after)</h3>
+          <div id="senate-2013-paper" class="paper-container"></div>
+        </div>
+        <div class="viz-container house-2011-container">
+          <h3>House (before)</h3>
+          <div id="house-2011-paper" class="paper-container"></div>
+        </div>
+        <div class="viz-container house-2013-container">
+          <h3>House (after)</h3>
+          <div id="house-2013-paper" class="paper-container"></div>
+        </div>
+      </div>
     </script>
     
     <script id="template-tooltip" type="text/template">
       <div class="tooltip-container">
+        <h3><%= d.name %></h3>
+        <% if (!_.isUndefined(d.party)) { %>
+          <div>Party: <%= d.party %></div>
+        <% } %>
+        <% if (!_.isUndefined(d.elected) && d.elected !== '') { %>
+          <div>Elected: <%= d.elected %></div>
+        <% } %>
       </div>
     </script>
   
@@ -152,6 +181,7 @@
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/underscore-1.3.3/underscore-min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery-custom-master-20120606/jquery-1.7.2.custom.min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/jquery.jsonp-2.4.0/jquerycustom.jsonp-2.4.0.min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/qtip2-master-20121022/jquerycustom.qtip.min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/raphael-2.1.0/raphael-min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/d3-2.10.3/builds/d3.core.min.js"></script>
     <script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/js/d3-2.10.3/builds/d3.layout.min.js"></script>
@@ -163,7 +193,7 @@
       jQueryCustom = jQueryCustom.noConflict();
       
       (function($, w, undefined) {
-        var dataURL = ['data/2013-house.json'];
+        var dataContainer = {};
         var templateLoading = $('#template-loading').html();
         var templateTooltip = $('#template-tooltip').html();
         var templateApplication = $('#template-application').html();
@@ -185,9 +215,10 @@
           this.name = d.name || '';
           this.party = d.party || 'NP';
           this.incumbent = (_.isBoolean(d.incumbent)) ? d.incumbent : 
-            ((d.incumbent.indexOf('Incum') !== -1) ? true : false);
+            ((_.isString(d.incumbent) && d.incumbent.indexOf('Incum') !== -1) ? true : false);
           this.elected = d.elected || '';
           this.previous_terms = d.previous_terms || '';
+          this.selectedYear = d.selectedYear || '';
           this.type = 'none';
           
           this.init();
@@ -195,20 +226,20 @@
         NewCandidate.prototype.init = function() {
           // Process data
           this.type = (this.incumbent) ? 'incumbent' : this.type;
-          this.type = (!this.incumbent && this.elected === '2012') ? 'new' : this.type;
-          this.type = (!this.incumbent && this.elected !== '2012') ? 'returning' : this.type;
+          this.type = (!this.incumbent && this.previous_terms !== '') ? 'returning' : this.type;
+          this.type = (!this.incumbent && this.elected === this.selectedYear && this.previous_terms === '') 
+            ? 'new' : this.type;
         }
         
-        // Function for handling data after it is loaded
-        var processData = function(data) {
-          // Reset container
-          $('#chart-container').html(_.template(templateApplication, {}));
-          var w = $('#paper-container').width();
-          var h = $('#paper-container').height();
+        var drawChamber = function(data, set, el) {
+          var w = $('#' + el).width();
+          var h = $('#' + el).height();
+          var selectedYear = (set.indexOf('2013') !== -1) ? '2012' : '2010';
           
           // Process data into what D3 likes
           candidates = {};
           _.each(data, function(d) {
+            d.selectedYear = selectedYear;
             d = new NewCandidate(d);
             var group = d.type + '-' + d.party;
             candidates[group] = candidates[group] || {
@@ -225,10 +256,10 @@
             .size([w, h])
             .value(function(d) { return 1; });
           var packed = pack.nodes(candidates);
-          
+
           // Render with Raphael
-          var paper = Raphael('paper-container', w, h);
-          _.each(packed, function(p) {
+          var paper = Raphael(el, w, h);
+          _.each(packed, function(p, i) {
             var attr = {};
             
             if (p.depth <= 1) {
@@ -241,13 +272,47 @@
             if (p.depth >= 2) {
               attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC'
             }
-            paper.circle(p.x, p.y, p.r).attr(attr);
+            packed[i].circle = paper.circle(p.x, p.y, p.r).attr(attr);
+            $(packed[i].circle.node).qtip({
+              content: {
+                text: _.template(templateTooltip, { d: p })
+              },
+              style: {
+                classes: 'ui-tooltip-shadow ui-tooltip-light'
+              },
+              position: {
+                at: 'top center',
+                my: 'bottom center'
+              }
+            });
+          });
+        };
+        
+        // Function for handling data after it is loaded
+        var processData = function(data) {
+          // Reset container
+          $('#chart-container').html(_.template(templateApplication, {}));
+          
+          _.each(data, function(d, i) {
+            drawChamber(d, i, i + '-paper');
           });
         };
         
         // Kick it off
         $('#chart-container').html(_.template(templateLoading, {}));
-        $.getJSON(dataURL.join(''), processData);
+        $.getJSON('data/2011-house.json', function(d) {
+          dataContainer['house-2011'] = d;
+          $.getJSON('data/2011-senate.json', function(d) {
+            dataContainer['senate-2011'] = d;
+            $.getJSON('data/2013-house.json', function(d) {
+              dataContainer['house-2013'] = d;
+              $.getJSON('data/2013-senate.json', function(d) {
+                dataContainer['senate-2013'] = d;
+                processData(dataContainer);
+              });
+            });
+          });
+        });
         
         return;
         $.getJSON({
