@@ -99,6 +99,13 @@
         margin-bottom: 1em;
       }
       
+      .color-block {
+        display: inline-block;
+        height: 10px;
+        width: 10px;
+        margin-left: .5em;
+      }
+      
       /**
        * Responsive screen size styles
        */
@@ -171,7 +178,8 @@
       <div class="chart-labels">
         <% var count = 0; %>
         <% for (var i in g) { %>
-          <span style="color: <%= g[i].typeColor %>"><%= g[i].typeTitle %></span>: 
+          <span class="color-block" style="background-color: <%= g[i].typeColor %>"></span>
+          <%= g[i].typeTitle %>
           
           <% var p = _.groupBy(g[i].children, 'party'); %>
           <% var pCount = 0; %>
@@ -182,7 +190,6 @@
             <% pCount++; if (pCount < _.size(p)) { %>-<% } %>
           <% } %>
           
-          <% count++; if (count < _.size(g)) { %>|<% } %>
         <% } %>
       </div>
     </script>
@@ -262,9 +269,9 @@
         
         // Types
         var typesTranslator = {
-          'new': { title: 'New', colors: [ '#8CB89F' ] },
-          'incumbent': { title: 'Incumbent', colors: [ '#AAAAAA' ] },
-          'returning': { title: 'Returning', colors: [ '#F9A14B' ] }
+          'new': { title: 'New', colors: [ '#2EB800' ] },
+          'incumbent': { title: 'Incumbent', colors: [ '#F53D00' ] },
+          'returning': { title: 'Returning', colors: [ '#B88A00' ] }
         };
         
         // Object/class for handling candidates
@@ -347,7 +354,9 @@
               attr['stroke-width'] = 0;
             }
             if (p.depth == 1) {
-              attr.fill = p.typeColor;
+              attr.stroke = p.typeColor;
+              attr['stroke-width'] = 4;
+              attr.fill = '#FFFFFF';
               attr.opacity = 0.4;
               p.r += 2;
             }
