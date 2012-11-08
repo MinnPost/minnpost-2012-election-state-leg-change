@@ -88,6 +88,10 @@
         height: 300px;
       }
       
+      .chart-labels {
+        text-transform: capitalize;
+      }
+      
       /**
        * Responsive screen size styles
        */
@@ -120,7 +124,7 @@
       <div id="chart-container">
       </div>
       
-      <p class="footnote">Registered voter data provided by the <a href="http://www.sos.state.mn.us/index.aspx?page=531" target="_blank">MN Secretary of State</a>.</p>
+      <p class="footnote">Data from multiple sources, including <a href="http://www.leg.state.mn.us/" target="_blank">MN State Legislature</a>.</p>
     </div>
     
     <!-- Templates to be used in client side processing. -->
@@ -138,21 +142,37 @@
     <script id="template-application" type="text/template">
       <div class="clear-block">
         <div class="viz-container senate-2011-container">
-          <h3>Senate (before)</h3>
+          <h3>Senate 2011</h3>
           <div id="senate-2011-paper" class="paper-container"></div>
         </div>
         <div class="viz-container senate-2013-container">
-          <h3>Senate (after)</h3>
+          <h3>Senate 2013</h3>
           <div id="senate-2013-paper" class="paper-container"></div>
         </div>
         <div class="viz-container house-2011-container">
-          <h3>House (before)</h3>
+          <h3>House 2011</h3>
           <div id="house-2011-paper" class="paper-container"></div>
         </div>
         <div class="viz-container house-2013-container">
-          <h3>House (after)</h3>
+          <h3>House 2013</h3>
           <div id="house-2013-paper" class="paper-container"></div>
         </div>
+      </div>
+    </script>
+    
+    <script id="template-chart-labels" type="text/template">
+      <div class="chart-labels">
+        <% var count = 0; %>
+        <% for (var i in g) { %>
+          <%= i %>:
+          <% for (var j = 0, l = g[i].length; j < l; j++) { %>
+            <span style="color: <%= g[i][j].partyColor %>;">
+              <%= g[i][j].children.length %>
+            </span>
+            <% if (j < l - 1) { %>-<% } %>
+          <% } %>
+          <% count++; if (count < _.size(g)) { %>|<% } %>
+        <% } %>
       </div>
     </script>
     
@@ -198,6 +218,7 @@
         var templateTooltip = $('#template-tooltip').html();
         var templateApplication = $('#template-application').html();
         var templateDown = $('#template-service-down').html();
+        var templateLabel = $('#template-chart-labels').html();
         
         // For local testing
         if (location.host.indexOf('localhost') !== -1) {
@@ -211,6 +232,23 @@
           'DFL': { party: 'DFL', colors: [ '#0071AC' ], title: 'Democratic' },
           'D': { party: 'D', colors: [ '#0071AC' ], title: 'Democratic-Farmer-Labor' },
           'NP': { party: 'NP', colors: [ '#A8A8A8' ], title: 'Nonpartisan' }
+        };
+        
+        // Types
+        var typesTranslator = {
+          'new': { title: 'New' },
+          'incumbent': { title: 'Incumbent' },
+          'returning': { title: 'Returning' }
+        };
+        
+        // Color functions
+        var lighten = function(color, amount) {
+          amount = amount || 0.2;
+          var rgb = Raphael.getRGB(color);
+          var hsb = Raphael.rgb2hsb(rgb.r, rgb.g, rgb.b);
+          var s = 'hsb(' + hsb.h + ', ' + hsb.s + ', ' + (hsb.b + amount) + ')';
+          var newrgb = Raphael.getRGB(s);
+          return newrgb.hex;
         };
         
         // Object/class for handling candidates
@@ -234,11 +272,14 @@
           this.type = (!this.incumbent && this.previous_terms !== '') ? 'returning' : this.type;
           this.type = (!this.incumbent && this.elected === this.selectedYear && this.previous_terms === '') 
             ? 'new' : this.type;
+          
+          this.partyColor = (this.party && parties[this.party]) ? parties[this.party].colors[0] : '#DCDCDC';
         }
         
         var drawChamber = function(data, set, el) {
-          var w = $('#' + el).width();
-          var h = $('#' + el).height();
+          var $el = $('#' + el);
+          var w = $el.width();
+          var h = $el.height();
           var selectedYear = (set.indexOf('2013') !== -1) ? '2012' : '2010';
           
           // Process data into what D3 likes
@@ -248,7 +289,10 @@
             d = new NewCandidate(d);
             var group = d.type + '-' + d.party;
             candidates[group] = candidates[group] || {
-              name: d.type,
+              name: typesTranslator[d.type].title,
+              type: d.type,
+              party: d.party,
+              partyColor: d.partyColor,
               children: []
             };
             candidates[group].children.push(d);
@@ -257,27 +301,41 @@
           
           // Use D3 pack layout
           var pack = d3.layout.pack()
-            .padding(5)
+            .padding(7)
             .size([w, h])
             .value(function(d) { return 1; });
           var packed = pack.nodes(candidates);
+          
+          // Make labels.
+          var groups = _.filter(packed, function(p) { return (p.depth === 1); });
+          groups = _.groupBy(groups, 'type');
+          $el.before(_.template(templateLabel, { g: groups }));
 
           // Render with Raphael
           var paper = Raphael(el, w, h);
           _.each(packed, function(p, i) {
             var attr = {};
             
+            // Determine colors and other attributes for circles
             if (p.depth <= 1) {
               attr.fill = '#FFFFFF';
               attr['stroke-width'] = 0;
             }
             if (p.depth == 1) {
-              attr.fill = '#E2E2E2';
+              attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC';
+              attr.fill = lighten(attr.fill, 0.3);
+              attr.opacity = 0.1;
+              p.r += 2;
             }
             if (p.depth >= 2) {
+              attr['stroke-width'] = 0;
               attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC'
             }
+            
+            // Make circle
             packed[i].circle = paper.circle(p.x, p.y, p.r).attr(attr);
+            
+            // Add hover
             $(packed[i].circle.node).qtip({
               content: {
                 text: _.template(templateTooltip, { d: p })
