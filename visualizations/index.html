@@ -91,6 +91,13 @@
       .chart-labels {
         text-transform: capitalize;
       }
+      .chart-labels span {
+        font-family: Helvetica,Arial,Geneva,sans-serif;
+      }
+      
+      .tooltip-container h3 {
+        margin-bottom: 1em;
+      }
       
       /**
        * Responsive screen size styles
@@ -165,7 +172,7 @@
         <% var count = 0; %>
         <% for (var i in g) { %>
           <%= i %>:
-          <% for (var j = 0, l = g[i].length; j < l; j++) { %>
+          <% g[i] = _.sortBy(g[i], 'party'); for (var j = 0, l = g[i].length; j < l; j++) { %>
             <span style="color: <%= g[i][j].partyColor %>;">
               <%= g[i][j].children.length %>
             </span>
@@ -178,13 +185,26 @@
     
     <script id="template-tooltip" type="text/template">
       <div class="tooltip-container">
-        <h3><%= d.name %></h3>
-        <% if (!_.isUndefined(d.party)) { %>
-          <div>Party: <%= d.party %></div>
-        <% } %>
-        <% if (!_.isUndefined(d.elected) && d.elected !== '') { %>
-          <div>Elected: <%= d.elected %></div>
-        <% } %>
+        <h3>
+          <%= d.name %> 
+          (<span style="color: <%= d.partyColor %>"><%= d.party %></span>)
+        </h3>
+        <table>
+          <tbody>
+            <% if (!_.isUndefined(d.elected) && d.elected !== '') { %>
+              <tr><td>First elected:</td><td><%= d.elected %></td>
+            <% } %>
+            <% if (!_.isUndefined(d.children) && _.isArray(d.children)) { %>
+              <tr><td>Legislators:</td><td><%= d.children.length %></td>
+            <% } %>
+            <% if (!_.isUndefined(d.previous_terms) && d.previous_terms !== '') { %>
+              <tr><td>Previous terms:</td><td><%= d.previous_terms %></td>
+            <% } %>
+            <% if (!_.isUndefined(d.incumbent) && d.incumbent !== '') { %>
+              <tr><td>Incumbent:</td><td>Yes</td>
+            <% } %>
+          </tbody>
+        </table>
       </div>
     </script>
   
@@ -236,9 +256,9 @@
         
         // Types
         var typesTranslator = {
-          'new': { title: 'New' },
-          'incumbent': { title: 'Incumbent' },
-          'returning': { title: 'Returning' }
+          'new': { title: 'New', lighten: 0 },
+          'incumbent': { title: 'Incumbent', lighten: -0.2 },
+          'returning': { title: 'Returning', lighten: -0.5 }
         };
         
         // Color functions
@@ -323,8 +343,8 @@
             }
             if (p.depth == 1) {
               attr.fill = (p.party && parties[p.party]) ? parties[p.party].colors[0] : '#DCDCDC';
-              attr.fill = lighten(attr.fill, 0.3);
-              attr.opacity = 0.1;
+              attr.fill = lighten(attr.fill, typesTranslator[p.type].lighten);
+              attr.opacity = 0.2;
               p.r += 2;
             }
             if (p.depth >= 2) {
@@ -336,18 +356,20 @@
             packed[i].circle = paper.circle(p.x, p.y, p.r).attr(attr);
             
             // Add hover
-            $(packed[i].circle.node).qtip({
-              content: {
-                text: _.template(templateTooltip, { d: p })
-              },
-              style: {
-                classes: 'ui-tooltip-shadow ui-tooltip-light'
-              },
-              position: {
-                at: 'top center',
-                my: 'bottom center'
-              }
-            });
+            if (p.depth !== 0) {
+              $(packed[i].circle.node).qtip({
+                content: {
+                  text: _.template(templateTooltip, { d: p })
+                },
+                style: {
+                  classes: 'ui-tooltip-shadow ui-tooltip-light'
+                },
+                position: {
+                  at: 'top center',
+                  my: 'bottom center'
+                }
+              });
+            }
           });
         };
         
