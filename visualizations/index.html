@@ -248,7 +248,7 @@
             <% if (!_.isUndefined(d.previous_terms) && d.previous_terms !== '') { %>
               <tr><td>Previous terms:</td><td><%= d.previous_terms %></td>
             <% } %>
-            <% if (!_.isUndefined(d.incumbent) && d.incumbent !== '') { %>
+            <% if (!_.isUndefined(d.incumbent) && d.incumbent !== false) { %>
               <tr><td>Incumbent:</td><td>Yes</td>
             <% } %>
           </tbody>
@@ -317,12 +317,12 @@
         
         // Object/class for handling candidates
         var NewCandidate = function(d) {
+
           // Parse data
           this.district = d.district || '';
           this.name = d.name || '';
           this.party = d.party || 'NP';
-          this.incumbent = (_.isBoolean(d.incumbent)) ? d.incumbent : 
-            ((_.isString(d.incumbent) && d.incumbent.indexOf('Incum') !== -1) ? true : false);
+          this.incumbent = (_.isString(d.incumbent) && d.incumbent.indexOf('Incum') !== -1) ? true : false;
           this.elected = d.elected || '';
           this.previous_terms = d.previous_terms || '';
           this.selectedYear = d.selectedYear || '';
